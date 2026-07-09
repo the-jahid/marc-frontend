@@ -63,7 +63,7 @@ async function proxyToApiServer(
   }
 
   try {
-    return await fetch(targetUrl, {
+    const upstreamResponse = await fetch(targetUrl, {
       body: requestHasBody(request) ? request.body : undefined,
       cache: "no-store",
       duplex: "half",
@@ -71,6 +71,22 @@ async function proxyToApiServer(
       method: request.method,
       redirect: "manual",
     } as RequestInit & { duplex: "half" });
+
+    // fetch already decompressed the body; forwarding the upstream
+    // content-encoding/content-length headers makes the browser fail
+    // with ERR_CONTENT_DECODING_FAILED.
+    const responseHeaders = new Headers(upstreamResponse.headers);
+    responseHeaders.delete("content-encoding");
+    responseHeaders.delete("content-length");
+    for (const header of HOP_BY_HOP_HEADERS) {
+      responseHeaders.delete(header);
+    }
+
+    return new Response(upstreamResponse.body, {
+      status: upstreamResponse.status,
+      statusText: upstreamResponse.statusText,
+      headers: responseHeaders,
+    });
   } catch (error) {
     return Response.json(
       {

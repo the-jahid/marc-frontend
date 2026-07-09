@@ -16,6 +16,20 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
+## API Server
+
+The frontend calls its own `/api/*` routes. Those routes proxy requests to the
+Nest server configured with `API_SERVER_URL`.
+
+For local development, run the Nest server on port 3000 or set:
+
+```env
+API_SERVER_URL=http://localhost:3000
+```
+
+On Render or another host, set `API_SERVER_URL` to the deployed Nest API service
+URL, not the frontend service URL.
+
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.

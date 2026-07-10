@@ -1,6 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  type FormEvent,
+  type KeyboardEvent,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import {
   API_BASE_URL,
   apiFetch,
@@ -19,7 +26,11 @@ export default function ConversationsTab() {
   const [loadingList, setLoadingList] = useState(true);
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [draft, setDraft] = useState("");
+  const [sending, setSending] = useState(false);
+  const [sendError, setSendError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const selectedPhoneRef = useRef<string | null>(null);
 
   const fetchConversations = useCallback(async () => {
     try {
@@ -90,6 +101,67 @@ export default function ConversationsTab() {
     conversation.phoneNumber.includes(search.trim()),
   );
 
+  const selectConversation = (phoneNumber: string) => {
+    selectedPhoneRef.current = phoneNumber;
+    setSelectedPhone(phoneNumber);
+    setDraft("");
+    setSendError(null);
+  };
+
+  const handleSend = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    const phoneNumber = selectedPhone;
+    const message = draft.trim();
+
+    if (!phoneNumber || !message || sending) {
+      return;
+    }
+
+    setSending(true);
+    setSendError(null);
+
+    try {
+      const sentMessage = await apiFetch<ConversationMessage>(
+        `/conversations/${encodeURIComponent(phoneNumber)}/messages`,
+        {
+          method: "POST",
+          body: JSON.stringify({ message }),
+        },
+      );
+
+      if (selectedPhoneRef.current === phoneNumber) {
+        setMessages((currentMessages) =>
+          currentMessages.some((item) => item.id === sentMessage.id)
+            ? currentMessages
+            : [...currentMessages, sentMessage],
+        );
+        setDraft("");
+      }
+
+      void fetchConversations();
+    } catch (sendRequestError) {
+      if (selectedPhoneRef.current === phoneNumber) {
+        setSendError(
+          sendRequestError instanceof Error
+            ? sendRequestError.message
+            : "Could not send the WhatsApp message.",
+        );
+      }
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const handleComposerKeyDown = (
+    event: KeyboardEvent<HTMLTextAreaElement>,
+  ) => {
+    if (event.key === "Enter" && !event.shiftKey) {
+      event.preventDefault();
+      event.currentTarget.form?.requestSubmit();
+    }
+  };
+
   return (
     <div className="flex h-full overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
       {/* Sidebar */}
@@ -145,7 +217,7 @@ export default function ConversationsTab() {
             return (
               <button
                 key={conversation.phoneNumber}
-                onClick={() => setSelectedPhone(conversation.phoneNumber)}
+                onClick={() => selectConversation(conversation.phoneNumber)}
                 className={`flex w-full items-start gap-3 border-b border-zinc-100 px-4 py-3 text-left transition-colors dark:border-zinc-800/60 ${
                   isSelected
                     ? "bg-emerald-50 dark:bg-emerald-500/10"
@@ -262,6 +334,56 @@ export default function ConversationsTab() {
               })}
               <div ref={messagesEndRef} />
             </div>
+
+            <form
+              onSubmit={handleSend}
+              className="border-t border-zinc-200 bg-white px-4 py-3 dark:border-zinc-800 dark:bg-zinc-900"
+            >
+              {sendError && (
+                <p className="mb-2 text-sm text-red-600 dark:text-red-400">
+                  {sendError}
+                </p>
+              )}
+              <div className="flex items-end gap-3">
+                <textarea
+                  value={draft}
+                  onChange={(event) => setDraft(event.target.value)}
+                  onKeyDown={handleComposerKeyDown}
+                  maxLength={4096}
+                  rows={1}
+                  disabled={sending}
+                  placeholder="Type a WhatsApp reply…"
+                  aria-label="WhatsApp reply"
+                  className="max-h-36 min-h-11 flex-1 resize-y rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm text-zinc-900 outline-none transition-colors placeholder:text-zinc-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+                />
+                <button
+                  type="submit"
+                  disabled={sending || !draft.trim()}
+                  className="flex h-11 shrink-0 items-center gap-2 rounded-xl bg-emerald-600 px-5 text-sm font-semibold text-white transition-colors hover:bg-emerald-500 disabled:cursor-not-allowed disabled:bg-zinc-300 dark:disabled:bg-zinc-700"
+                >
+                  <span>{sending ? "Sending…" : "Send"}</span>
+                  {!sending && (
+                    <svg
+                      className="h-4 w-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth={2}
+                      aria-hidden="true"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="m6 12-3.269-9.53A59.77 59.77 0 0 1 21.485 12 59.768 59.768 0 0 1 2.731 21.53L6 12Zm0 0h7.5"
+                      />
+                    </svg>
+                  )}
+                </button>
+              </div>
+              <p className="mt-1.5 text-right text-[11px] text-zinc-400">
+                Enter to send · Shift+Enter for a new line · {draft.length}/4096
+              </p>
+            </form>
           </>
         )}
       </section>

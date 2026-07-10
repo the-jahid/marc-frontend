@@ -6,6 +6,8 @@ export type ConversationSummary = {
   lastRole: "USER" | "ASSISTANT";
   lastActivityAt: string;
   messageCount: number;
+  needsHumanAttention: boolean;
+  attentionReason: string | null;
 };
 
 export type ConversationMessage = {
@@ -13,6 +15,8 @@ export type ConversationMessage = {
   role: "USER" | "ASSISTANT";
   content: string;
   createdAt: string;
+  needsHumanAttention: boolean;
+  attentionReason: string | null;
 };
 
 export type KnowledgeEntry = {

@@ -1,11 +1,16 @@
 "use client";
 
 import { useState } from "react";
+import AbandonedCheckoutTab from "@/components/AbandonedCheckoutTab";
 import AgentConfigTab from "@/components/AgentConfigTab";
 import ConversationsTab from "@/components/ConversationsTab";
 import KnowledgebaseTab from "@/components/KnowledgebaseTab";
 
-type TabId = "conversations" | "knowledgebase" | "agent-config";
+type TabId =
+  | "conversations"
+  | "knowledgebase"
+  | "cart-recovery"
+  | "agent-config";
 
 const TABS: { id: TabId; label: string; icon: React.ReactNode }[] = [
   {
@@ -42,6 +47,25 @@ const TABS: { id: TabId; label: string; icon: React.ReactNode }[] = [
           strokeLinecap="round"
           strokeLinejoin="round"
           d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25"
+        />
+      </svg>
+    ),
+  },
+  {
+    id: "cart-recovery",
+    label: "Cart Recovery",
+    icon: (
+      <svg
+        className="h-4 w-4"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        strokeWidth={1.8}
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 0 0-16.536-1.84M7.5 14.25 5.106 5.272M6 20.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm12.75 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z"
         />
       </svg>
     ),
@@ -129,6 +153,7 @@ export default function Home() {
       <main className="min-h-0 flex-1 p-4 sm:p-6">
         {activeTab === "conversations" && <ConversationsTab />}
         {activeTab === "knowledgebase" && <KnowledgebaseTab />}
+        {activeTab === "cart-recovery" && <AbandonedCheckoutTab />}
         {activeTab === "agent-config" && <AgentConfigTab />}
       </main>
     </div>

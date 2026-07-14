@@ -43,6 +43,30 @@ export type AgentConfig = {
   effectiveModel: string;
 };
 
+export type AbandonedCheckoutConfig = {
+  enabled: boolean;
+  messageTemplate: string;
+  delayMinutes: number;
+  updatedAt: string | null;
+  defaultMessageTemplate: string;
+  infrastructureReady: boolean;
+  pollMinutes: number;
+  lookbackHours: number;
+};
+
+export type AbandonedCheckoutRunResult = {
+  skipped: boolean;
+  reason?: string;
+  scanned: number;
+  sent: number;
+  skippedCompleted: number;
+  skippedNoPhone: number;
+  skippedNoRecoveryUrl: number;
+  skippedAlreadySent: number;
+  failed: number;
+  durationMs: number;
+};
+
 export async function apiFetch<T>(
   path: string,
   init?: RequestInit,

@@ -6,7 +6,9 @@ import {
   apiFetch,
   formatDateTime,
   type AbandonedCheckoutConfig,
+  type AbandonedCheckoutRecord,
   type AbandonedCheckoutRunResult,
+  type AbandonedCheckoutStatus,
 } from "@/lib/api";
 
 const SAMPLE_NAME = "María";
@@ -26,11 +28,70 @@ function renderPreview(template: string): string {
   return message;
 }
 
+const STATUS_META: Record<
+  AbandonedCheckoutStatus,
+  { label: string; className: string }
+> = {
+  PENDING: {
+    label: "Pending",
+    className:
+      "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300",
+  },
+  MESSAGE_SENT: {
+    label: "Message sent",
+    className:
+      "bg-sky-100 text-sky-700 dark:bg-sky-950/40 dark:text-sky-300",
+  },
+  RECOVERED: {
+    label: "Recovered",
+    className:
+      "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300",
+  },
+  NO_RESPONSE: {
+    label: "No response",
+    className:
+      "bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300",
+  },
+  TRANSFERRED_TO_HUMAN: {
+    label: "Transferred to human",
+    className:
+      "bg-violet-100 text-violet-700 dark:bg-violet-950/40 dark:text-violet-300",
+  },
+};
+
+function StatusBadge({ status }: { status: AbandonedCheckoutStatus }) {
+  const meta = STATUS_META[status] ?? {
+    label: status,
+    className: "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300",
+  };
+
+  return (
+    <span
+      className={`inline-block whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-medium ${meta.className}`}
+    >
+      {meta.label}
+    </span>
+  );
+}
+
+function summariseItems(items: AbandonedCheckoutRecord["items"]): string {
+  if (!items || items.length === 0) {
+    return "—";
+  }
+
+  return items
+    .map((item) => `${item.quantity}× ${item.title}`)
+    .join(", ");
+}
+
 export default function AbandonedCheckoutTab() {
   const [config, setConfig] = useState<AbandonedCheckoutConfig | null>(null);
   const [enabled, setEnabled] = useState(false);
   const [message, setMessage] = useState("");
   const [delayMinutes, setDelayMinutes] = useState("60");
+  const [secondEnabled, setSecondEnabled] = useState(true);
+  const [secondMessage, setSecondMessage] = useState("");
+  const [secondDelayHours, setSecondDelayHours] = useState("22");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -39,12 +100,17 @@ export default function AbandonedCheckoutTab() {
   const [runResult, setRunResult] = useState<AbandonedCheckoutRunResult | null>(
     null,
   );
+  const [records, setRecords] = useState<AbandonedCheckoutRecord[]>([]);
+  const [recordsLoading, setRecordsLoading] = useState(true);
 
   const applyConfig = useCallback((data: AbandonedCheckoutConfig) => {
     setConfig(data);
     setEnabled(data.enabled);
     setMessage(data.messageTemplate);
     setDelayMinutes(String(data.delayMinutes));
+    setSecondEnabled(data.secondReminderEnabled);
+    setSecondMessage(data.secondMessageTemplate);
+    setSecondDelayHours(String(data.secondDelayHours));
   }, []);
 
   const fetchConfig = useCallback(async () => {
@@ -63,19 +129,42 @@ export default function AbandonedCheckoutTab() {
     }
   }, [applyConfig]);
 
+  const fetchRecords = useCallback(async () => {
+    setRecordsLoading(true);
+    try {
+      const data = await apiFetch<AbandonedCheckoutRecord[]>(
+        "/abandoned-checkouts/records",
+      );
+      setRecords(data);
+    } catch {
+      // The config error banner already covers an unreachable API.
+    } finally {
+      setRecordsLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     const load = async () => {
       await fetchConfig();
+      await fetchRecords();
     };
 
     void load();
-  }, [fetchConfig]);
+  }, [fetchConfig, fetchRecords]);
 
   const delayNumber = Number(delayMinutes);
   const delayValid =
     Number.isInteger(delayNumber) && delayNumber >= 1 && delayNumber <= 10080;
+  const secondDelayNumber = Number(secondDelayHours);
+  const secondDelayValid =
+    Number.isInteger(secondDelayNumber) &&
+    secondDelayNumber >= 1 &&
+    secondDelayNumber <= 168;
   const messageMissing = enabled && message.trim().length === 0;
-  const canSave = delayValid && !messageMissing;
+  const secondMessageMissing =
+    enabled && secondEnabled && secondMessage.trim().length === 0;
+  const canSave =
+    delayValid && !messageMissing && secondDelayValid && !secondMessageMissing;
 
   const saveConfig = async () => {
     if (!canSave) {
@@ -93,6 +182,9 @@ export default function AbandonedCheckoutTab() {
             enabled,
             messageTemplate: message,
             delayMinutes: delayNumber,
+            secondReminderEnabled: secondEnabled,
+            secondMessageTemplate: secondMessage,
+            secondDelayHours: secondDelayNumber,
           }),
         },
       );
@@ -127,6 +219,7 @@ export default function AbandonedCheckoutTab() {
       );
       setRunResult(result);
       setError(null);
+      void fetchRecords();
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Running the recovery pass failed.",
@@ -137,6 +230,10 @@ export default function AbandonedCheckoutTab() {
   };
 
   const preview = useMemo(() => renderPreview(message), [message]);
+  const secondPreview = useMemo(
+    () => renderPreview(secondMessage),
+    [secondMessage],
+  );
 
   return (
     <div className="mx-auto h-full w-full max-w-3xl overflow-y-auto">
@@ -145,7 +242,7 @@ export default function AbandonedCheckoutTab() {
       </h2>
       <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
         Automatically message customers who left items in their cart. Write the
-        message here — no official WhatsApp template needed.
+        messages here — no official WhatsApp template needed.
       </p>
 
       {error && (
@@ -164,7 +261,7 @@ export default function AbandonedCheckoutTab() {
             <p className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-300">
               Shopify or WhatsApp sending is not configured yet, so reminders
               will not be sent until the server has those credentials. You can
-              still write and save the message below.
+              still write and save the messages below.
             </p>
           )}
 
@@ -204,13 +301,13 @@ export default function AbandonedCheckoutTab() {
             </button>
           </div>
 
-          {/* Message */}
+          {/* First message */}
           <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
             <label
               htmlFor="reminder-message"
               className="block font-medium text-zinc-900 dark:text-zinc-50"
             >
-              Reminder message
+              First reminder message
             </label>
             <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
               Use{" "}
@@ -249,16 +346,16 @@ export default function AbandonedCheckoutTab() {
             </div>
           </div>
 
-          {/* Delay */}
+          {/* First delay */}
           <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
             <label
               htmlFor="reminder-delay"
               className="block font-medium text-zinc-900 dark:text-zinc-50"
             >
-              Wait before sending
+              Wait before the first reminder
             </label>
             <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-              How long after a cart is abandoned to send the reminder.
+              How long after a cart is abandoned to send the first reminder.
             </p>
             <div className="mt-3 flex items-center gap-2">
               <input
@@ -278,6 +375,100 @@ export default function AbandonedCheckoutTab() {
               <p className="mt-2 text-xs text-red-600 dark:text-red-400">
                 Enter a whole number of minutes between 1 and 10080 (7 days).
               </p>
+            )}
+          </div>
+
+          {/* Second reminder */}
+          <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <p className="font-medium text-zinc-900 dark:text-zinc-50">
+                  Second reminder (follow-up)
+                </p>
+                <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+                  Sent a day later only if the customer has not replied and has
+                  not bought. Never more than two messages per cart.
+                </p>
+              </div>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={secondEnabled}
+                onClick={() => setSecondEnabled((value) => !value)}
+                className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${
+                  secondEnabled ? "bg-emerald-600" : "bg-zinc-300 dark:bg-zinc-700"
+                }`}
+              >
+                <span
+                  className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${
+                    secondEnabled ? "translate-x-5" : "translate-x-0.5"
+                  }`}
+                />
+              </button>
+            </div>
+
+            {secondEnabled && (
+              <div className="mt-4 border-t border-zinc-100 pt-4 dark:border-zinc-800">
+                <label
+                  htmlFor="second-reminder-message"
+                  className="block text-sm font-medium text-zinc-900 dark:text-zinc-50"
+                >
+                  Follow-up message
+                </label>
+                <textarea
+                  id="second-reminder-message"
+                  value={secondMessage}
+                  onChange={(event) => setSecondMessage(event.target.value)}
+                  placeholder={config?.defaultSecondMessageTemplate}
+                  rows={4}
+                  maxLength={1024}
+                  className="mt-2 w-full resize-y rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm leading-relaxed text-zinc-900 outline-none transition-colors placeholder:text-zinc-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+                />
+                {secondMessageMissing && (
+                  <p className="mt-2 text-xs text-red-600 dark:text-red-400">
+                    Write a follow-up message or turn the second reminder off.
+                  </p>
+                )}
+
+                <div className="mt-4">
+                  <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
+                    Preview
+                  </p>
+                  <div className="mt-2 max-w-sm whitespace-pre-wrap rounded-2xl rounded-tl-sm bg-emerald-600 px-3.5 py-2.5 text-sm text-white shadow-sm">
+                    {secondPreview ||
+                      "Your follow-up preview will appear here."}
+                  </div>
+                </div>
+
+                <label
+                  htmlFor="second-reminder-delay"
+                  className="mt-4 block text-sm font-medium text-zinc-900 dark:text-zinc-50"
+                >
+                  Wait before the follow-up
+                </label>
+                <div className="mt-2 flex items-center gap-2">
+                  <input
+                    id="second-reminder-delay"
+                    type="number"
+                    min={1}
+                    max={168}
+                    value={secondDelayHours}
+                    onChange={(event) =>
+                      setSecondDelayHours(event.target.value)
+                    }
+                    className="w-28 rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm text-zinc-900 outline-none transition-colors focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+                  />
+                  <span className="text-sm text-zinc-500 dark:text-zinc-400">
+                    hours after abandonment
+                  </span>
+                </div>
+                {!secondDelayValid && (
+                  <p className="mt-2 text-xs text-red-600 dark:text-red-400">
+                    Enter a whole number of hours between 1 and 168 (7 days). The
+                    spec suggests 20–24 hours.
+                  </p>
+                )}
+              </div>
             )}
           </div>
 
@@ -348,8 +539,107 @@ export default function AbandonedCheckoutTab() {
                             ? "a pass is already running."
                             : "skipped."
                     }`
-                  : `Scanned ${runResult.scanned} · sent ${runResult.sent} · already completed ${runResult.skippedCompleted} · no phone ${runResult.skippedNoPhone} · already sent ${runResult.skippedAlreadySent} · failed ${runResult.failed}`}
+                  : `Scanned ${runResult.scanned} · sent ${runResult.sent} · follow-ups ${runResult.secondSent} · recovered ${runResult.recovered} · replied ${runResult.responded} · to human ${runResult.transferred} · no response ${runResult.noResponse} · failed ${runResult.failed}`}
               </p>
+            )}
+          </div>
+
+          {/* Records */}
+          <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <p className="font-medium text-zinc-900 dark:text-zinc-50">
+                  Recovery records
+                </p>
+                <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+                  Every cart the flow has touched, with contact details, items,
+                  message dates and status.
+                </p>
+              </div>
+              <button
+                onClick={() => void fetchRecords()}
+                disabled={recordsLoading}
+                className="rounded-lg border border-zinc-300 px-3 py-1.5 text-xs font-medium text-zinc-700 transition-colors hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800"
+              >
+                {recordsLoading ? "Refreshing…" : "Refresh"}
+              </button>
+            </div>
+
+            {recordsLoading && records.length === 0 ? (
+              <p className="mt-4 text-sm text-zinc-500 dark:text-zinc-400">
+                Loading records…
+              </p>
+            ) : records.length === 0 ? (
+              <p className="mt-4 text-sm text-zinc-500 dark:text-zinc-400">
+                No carts have entered the recovery flow yet.
+              </p>
+            ) : (
+              <div className="mt-4 overflow-x-auto">
+                <table className="w-full border-collapse text-left text-sm">
+                  <thead>
+                    <tr className="border-b border-zinc-200 text-xs uppercase tracking-wide text-zinc-400 dark:border-zinc-800">
+                      <th className="py-2 pr-3 font-medium">Customer</th>
+                      <th className="py-2 pr-3 font-medium">Items</th>
+                      <th className="py-2 pr-3 font-medium">Status</th>
+                      <th className="py-2 pr-3 font-medium">1st msg</th>
+                      <th className="py-2 pr-3 font-medium">2nd msg</th>
+                      <th className="py-2 pr-3 font-medium">Cart</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {records.map((record) => (
+                      <tr
+                        key={record.checkoutId}
+                        className="border-b border-zinc-100 align-top last:border-0 dark:border-zinc-800/60"
+                      >
+                        <td className="py-2.5 pr-3">
+                          <div className="font-medium text-zinc-900 dark:text-zinc-100">
+                            {record.customerName || "—"}
+                          </div>
+                          <div className="text-xs text-zinc-500 dark:text-zinc-400">
+                            {record.phoneNumber || "no phone"}
+                          </div>
+                          {record.email && (
+                            <div className="text-xs text-zinc-400 dark:text-zinc-500">
+                              {record.email}
+                            </div>
+                          )}
+                        </td>
+                        <td className="max-w-56 py-2.5 pr-3 text-zinc-600 dark:text-zinc-300">
+                          {summariseItems(record.items)}
+                        </td>
+                        <td className="py-2.5 pr-3">
+                          <StatusBadge status={record.status} />
+                        </td>
+                        <td className="whitespace-nowrap py-2.5 pr-3 text-xs text-zinc-500 dark:text-zinc-400">
+                          {record.firstMessageAt
+                            ? formatDateTime(record.firstMessageAt)
+                            : "—"}
+                        </td>
+                        <td className="whitespace-nowrap py-2.5 pr-3 text-xs text-zinc-500 dark:text-zinc-400">
+                          {record.secondMessageAt
+                            ? formatDateTime(record.secondMessageAt)
+                            : "—"}
+                        </td>
+                        <td className="py-2.5 pr-3">
+                          {record.recoveryUrl ? (
+                            <a
+                              href={record.recoveryUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-emerald-600 hover:underline dark:text-emerald-400"
+                            >
+                              Open
+                            </a>
+                          ) : (
+                            "—"
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )}
           </div>
         </div>

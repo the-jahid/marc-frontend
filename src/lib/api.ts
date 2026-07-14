@@ -47,8 +47,12 @@ export type AbandonedCheckoutConfig = {
   enabled: boolean;
   messageTemplate: string;
   delayMinutes: number;
+  secondReminderEnabled: boolean;
+  secondMessageTemplate: string;
+  secondDelayHours: number;
   updatedAt: string | null;
   defaultMessageTemplate: string;
+  defaultSecondMessageTemplate: string;
   infrastructureReady: boolean;
   pollMinutes: number;
   lookbackHours: number;
@@ -59,12 +63,42 @@ export type AbandonedCheckoutRunResult = {
   reason?: string;
   scanned: number;
   sent: number;
+  secondSent: number;
+  recovered: number;
+  responded: number;
+  transferred: number;
+  noResponse: number;
   skippedCompleted: number;
   skippedNoPhone: number;
   skippedNoRecoveryUrl: number;
   skippedAlreadySent: number;
   failed: number;
   durationMs: number;
+};
+
+export type AbandonedCheckoutStatus =
+  | "PENDING"
+  | "MESSAGE_SENT"
+  | "RECOVERED"
+  | "NO_RESPONSE"
+  | "TRANSFERRED_TO_HUMAN";
+
+export type AbandonedCheckoutRecord = {
+  checkoutId: string;
+  phoneNumber: string | null;
+  email: string | null;
+  customerName: string | null;
+  items: { title: string; quantity: number }[];
+  recoveryUrl: string | null;
+  status: AbandonedCheckoutStatus;
+  messageCount: number;
+  firstMessageAt: string | null;
+  secondMessageAt: string | null;
+  respondedAt: string | null;
+  recoveredAt: string | null;
+  transferredAt: string | null;
+  createdAt: string;
+  updatedAt: string;
 };
 
 export async function apiFetch<T>(

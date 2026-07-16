@@ -451,8 +451,8 @@ export default function ConversationsTab() {
           </div>
         ) : (
           <>
-            <header className="flex items-center justify-between gap-4 border-b border-zinc-200 bg-white px-6 py-3 dark:border-zinc-800 dark:bg-zinc-900">
-              <div className="flex min-w-0 items-center gap-3">
+            <header className="flex items-center justify-between gap-2 border-b border-zinc-200 bg-white px-3 py-3 sm:gap-4 sm:px-6 dark:border-zinc-800 dark:bg-zinc-900">
+              <div className="flex min-w-0 items-center gap-2 sm:gap-3">
                 <button
                   type="button"
                   onClick={backToList}
@@ -487,9 +487,14 @@ export default function ConversationsTab() {
                 </div>
               </div>
               {selectedNeedsAttention && (
-                <span className="flex shrink-0 items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-800 dark:border-amber-400/20 dark:bg-amber-400/10 dark:text-amber-300">
+                <span
+                  className="flex shrink-0 items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-2 py-1.5 text-xs font-semibold text-amber-800 sm:px-3 dark:border-amber-400/20 dark:bg-amber-400/10 dark:text-amber-300"
+                  title="Human attention needed"
+                >
                   <AttentionIcon />
-                  Human attention needed
+                  <span className="hidden sm:inline">
+                    Human attention needed
+                  </span>
                 </span>
               )}
             </header>
@@ -497,7 +502,7 @@ export default function ConversationsTab() {
             {selectedNeedsAttention && (
               <div
                 role="status"
-                className="flex items-start gap-3 border-b border-amber-200 bg-amber-50/80 px-6 py-3 text-amber-900 dark:border-amber-400/20 dark:bg-amber-400/10 dark:text-amber-100"
+                className="flex items-start gap-3 border-b border-amber-200 bg-amber-50/80 px-4 py-3 text-amber-900 sm:px-6 dark:border-amber-400/20 dark:bg-amber-400/10 dark:text-amber-100"
               >
                 <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-amber-400 text-amber-950">
                   <AttentionIcon />
@@ -521,7 +526,7 @@ export default function ConversationsTab() {
                   onClick={scrollToOldestMessage}
                   aria-label="Scroll to first message"
                   title="Scroll to first message"
-                  className="absolute right-5 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full border border-zinc-200 bg-white/90 text-zinc-600 shadow-sm backdrop-blur-sm transition-colors hover:bg-zinc-100 hover:text-zinc-900 dark:border-zinc-700 dark:bg-zinc-900/90 dark:text-zinc-300 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
+                  className="absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full sm:right-5 border border-zinc-200 bg-white/90 text-zinc-600 shadow-sm backdrop-blur-sm transition-colors hover:bg-zinc-100 hover:text-zinc-900 dark:border-zinc-700 dark:bg-zinc-900/90 dark:text-zinc-300 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
                 >
                   <svg
                     className="h-5 w-5"
@@ -543,7 +548,7 @@ export default function ConversationsTab() {
               <div
                 ref={messagesContainerRef}
                 onScroll={handleMessagesScroll}
-                className="flex-1 space-y-2 overflow-y-auto px-6 py-4"
+                className="flex-1 space-y-2 overflow-y-auto px-3 py-4 sm:px-6"
               >
                 {loadingMessages && messages.length === 0 && (
                   <p className="text-sm text-zinc-500 dark:text-zinc-400">
@@ -559,7 +564,7 @@ export default function ConversationsTab() {
                       className={`flex ${isUser ? "justify-start" : "justify-end"}`}
                     >
                       <div
-                        className={`max-w-[70%] rounded-2xl px-4 py-2 shadow-sm ${
+                        className={`max-w-[85%] rounded-2xl px-4 py-2 shadow-sm sm:max-w-[75%] lg:max-w-[70%] ${
                           isUser
                             ? "rounded-bl-md border border-zinc-200 bg-white text-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
                             : "rounded-br-md bg-linear-to-br from-emerald-600 to-teal-700 text-white"
@@ -591,7 +596,7 @@ export default function ConversationsTab() {
                   {sendError}
                 </p>
               )}
-              <div className="flex items-end gap-3">
+              <div className="flex items-end gap-2 sm:gap-3">
                 <textarea
                   value={draft}
                   onChange={(event) => setDraft(event.target.value)}
@@ -606,7 +611,7 @@ export default function ConversationsTab() {
                 <button
                   type="submit"
                   disabled={sending || !draft.trim()}
-                  className="flex h-11 shrink-0 items-center gap-2 rounded-xl bg-emerald-600 px-5 text-sm font-semibold text-white transition-colors hover:bg-emerald-500 disabled:cursor-not-allowed disabled:bg-zinc-300 dark:disabled:bg-zinc-700"
+                  className="flex h-11 shrink-0 items-center gap-2 rounded-xl bg-emerald-600 px-4 text-sm font-semibold text-white transition-colors hover:bg-emerald-500 disabled:cursor-not-allowed disabled:bg-zinc-300 sm:px-5 dark:disabled:bg-zinc-700"
                 >
                   <span>{sending ? "Sending…" : "Send"}</span>
                   {!sending && (

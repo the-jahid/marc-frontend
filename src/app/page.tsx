@@ -18,7 +18,7 @@ const TABS: { id: TabId; label: string; icon: React.ReactNode }[] = [
     label: "Conversations",
     icon: (
       <svg
-        className="h-4 w-4"
+        className="h-4 w-4 shrink-0"
         fill="none"
         viewBox="0 0 24 24"
         stroke="currentColor"
@@ -37,7 +37,7 @@ const TABS: { id: TabId; label: string; icon: React.ReactNode }[] = [
     label: "Knowledgebase",
     icon: (
       <svg
-        className="h-4 w-4"
+        className="h-4 w-4 shrink-0"
         fill="none"
         viewBox="0 0 24 24"
         stroke="currentColor"
@@ -56,7 +56,7 @@ const TABS: { id: TabId; label: string; icon: React.ReactNode }[] = [
     label: "Cart Recovery",
     icon: (
       <svg
-        className="h-4 w-4"
+        className="h-4 w-4 shrink-0"
         fill="none"
         viewBox="0 0 24 24"
         stroke="currentColor"
@@ -75,7 +75,7 @@ const TABS: { id: TabId; label: string; icon: React.ReactNode }[] = [
     label: "Agent Config",
     icon: (
       <svg
-        className="h-4 w-4"
+        className="h-4 w-4 shrink-0"
         fill="none"
         viewBox="0 0 24 24"
         stroke="currentColor"
@@ -95,58 +95,57 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<TabId>("conversations");
 
   return (
-    <div className="flex h-screen flex-col bg-zinc-100 font-sans dark:bg-zinc-950">
+    <div className="flex h-dvh flex-col bg-zinc-100 font-sans dark:bg-zinc-950">
       <header className="shrink-0 border-b border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
-        <div className="flex items-center justify-between px-6">
-          <div className="flex items-center gap-8">
-            <div className="flex items-center gap-2.5 py-3">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-linear-to-br from-emerald-500 to-teal-600 text-white shadow-sm">
-                <svg
-                  className="h-4.5 w-4.5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M8.625 9.75a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375m-13.5 3.01c0 1.6 1.123 2.994 2.707 3.227 1.087.16 2.185.283 3.293.369V21l4.184-4.183a1.14 1.14 0 0 1 .778-.332 48.294 48.294 0 0 0 5.83-.498c1.585-.233 2.708-1.626 2.708-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z"
-                  />
-                </svg>
-              </div>
-              <span className="text-sm font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
-                WhatsApp Agent Studio
-              </span>
+        <div className="flex flex-wrap items-center gap-x-8 px-4 sm:px-6">
+          <div className="order-1 flex items-center gap-2.5 py-3">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-linear-to-br from-emerald-500 to-teal-600 text-white shadow-sm">
+              <svg
+                className="h-4.5 w-4.5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M8.625 9.75a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375m-13.5 3.01c0 1.6 1.123 2.994 2.707 3.227 1.087.16 2.185.283 3.293.369V21l4.184-4.183a1.14 1.14 0 0 1 .778-.332 48.294 48.294 0 0 0 5.83-.498c1.585-.233 2.708-1.626 2.708-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z"
+                />
+              </svg>
             </div>
-
-            <nav className="flex gap-1">
-              {TABS.map((tab) => {
-                const isActive = tab.id === activeTab;
-                return (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`relative flex items-center gap-2 px-4 py-4 text-sm font-medium transition-colors ${
-                      isActive
-                        ? "text-emerald-600 dark:text-emerald-400"
-                        : "text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
-                    }`}
-                  >
-                    {tab.icon}
-                    {tab.label}
-                    {isActive && (
-                      <span className="absolute inset-x-3 bottom-0 h-0.5 rounded-full bg-emerald-500" />
-                    )}
-                  </button>
-                );
-              })}
-            </nav>
+            <span className="text-sm font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
+              WhatsApp Agent Studio
+            </span>
           </div>
 
-          <span className="hidden text-xs text-zinc-400 sm:block">
+          {/* Hidden between lg and xl, where the inline nav leaves no room for it. */}
+          <span className="order-2 ml-auto hidden text-xs text-zinc-400 sm:block lg:order-3 lg:hidden xl:block">
             Connected to WhatsApp Business API
           </span>
+
+          <nav className="order-3 flex w-full lg:order-2 lg:mr-auto lg:w-auto lg:gap-1">
+            {TABS.map((tab) => {
+              const isActive = tab.id === activeTab;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`relative flex min-w-0 flex-1 flex-col items-center justify-center gap-1 px-0.5 py-2.5 text-[10px] font-medium transition-colors sm:text-[11px] md:flex-none md:flex-row md:gap-2 md:px-4 md:py-4 md:text-sm ${
+                    isActive
+                      ? "text-emerald-600 dark:text-emerald-400"
+                      : "text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+                  }`}
+                >
+                  {tab.icon}
+                  <span className="max-w-full truncate">{tab.label}</span>
+                  {isActive && (
+                    <span className="absolute inset-x-2 bottom-0 h-0.5 rounded-full bg-emerald-500 md:inset-x-3" />
+                  )}
+                </button>
+              );
+            })}
+          </nav>
         </div>
       </header>
 

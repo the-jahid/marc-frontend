@@ -274,7 +274,7 @@ export default function AbandonedCheckoutTab() {
           </p>
 
           {/* Enable toggle */}
-          <div className="flex items-center justify-between gap-4 rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+          <div className="flex items-center justify-between gap-4 rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm sm:p-5 dark:border-zinc-800 dark:bg-zinc-900">
             <div>
               <p className="font-medium text-zinc-900 dark:text-zinc-50">
                 Send cart reminders
@@ -302,7 +302,7 @@ export default function AbandonedCheckoutTab() {
           </div>
 
           {/* First message */}
-          <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+          <div className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm sm:p-5 dark:border-zinc-800 dark:bg-zinc-900">
             <label
               htmlFor="reminder-message"
               className="block font-medium text-zinc-900 dark:text-zinc-50"
@@ -347,7 +347,7 @@ export default function AbandonedCheckoutTab() {
           </div>
 
           {/* First delay */}
-          <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+          <div className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm sm:p-5 dark:border-zinc-800 dark:bg-zinc-900">
             <label
               htmlFor="reminder-delay"
               className="block font-medium text-zinc-900 dark:text-zinc-50"
@@ -379,7 +379,7 @@ export default function AbandonedCheckoutTab() {
           </div>
 
           {/* Second reminder */}
-          <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+          <div className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm sm:p-5 dark:border-zinc-800 dark:bg-zinc-900">
             <div className="flex items-center justify-between gap-4">
               <div>
                 <p className="font-medium text-zinc-900 dark:text-zinc-50">
@@ -473,7 +473,7 @@ export default function AbandonedCheckoutTab() {
           </div>
 
           {/* Save row */}
-          <div className="flex items-center justify-between gap-4">
+          <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
             <p className="text-xs text-zinc-400">
               {config?.updatedAt
                 ? `Last saved ${formatDateTime(config.updatedAt)}`
@@ -509,7 +509,7 @@ export default function AbandonedCheckoutTab() {
           </div>
 
           {/* Run now */}
-          <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+          <div className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm sm:p-5 dark:border-zinc-800 dark:bg-zinc-900">
             <div className="flex items-center justify-between gap-4">
               <div>
                 <p className="font-medium text-zinc-900 dark:text-zinc-50">
@@ -522,7 +522,7 @@ export default function AbandonedCheckoutTab() {
               <button
                 onClick={runNow}
                 disabled={running}
-                className="rounded-lg border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800"
+                className="shrink-0 rounded-lg border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800"
               >
                 {running ? "Running…" : "Run now"}
               </button>
@@ -545,7 +545,7 @@ export default function AbandonedCheckoutTab() {
           </div>
 
           {/* Records */}
-          <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+          <div className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm sm:p-5 dark:border-zinc-800 dark:bg-zinc-900">
             <div className="flex items-center justify-between gap-4">
               <div>
                 <p className="font-medium text-zinc-900 dark:text-zinc-50">
@@ -559,7 +559,7 @@ export default function AbandonedCheckoutTab() {
               <button
                 onClick={() => void fetchRecords()}
                 disabled={recordsLoading}
-                className="rounded-lg border border-zinc-300 px-3 py-1.5 text-xs font-medium text-zinc-700 transition-colors hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800"
+                className="shrink-0 rounded-lg border border-zinc-300 px-3 py-1.5 text-xs font-medium text-zinc-700 transition-colors hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800"
               >
                 {recordsLoading ? "Refreshing…" : "Refresh"}
               </button>
@@ -574,8 +574,8 @@ export default function AbandonedCheckoutTab() {
                 No carts have entered the recovery flow yet.
               </p>
             ) : (
-              <div className="mt-4 overflow-x-auto">
-                <table className="w-full border-collapse text-left text-sm">
+              <div className="mt-4 -mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
+                <table className="w-full min-w-176 border-collapse text-left text-sm">
                   <thead>
                     <tr className="border-b border-zinc-200 text-xs uppercase tracking-wide text-zinc-400 dark:border-zinc-800">
                       <th className="py-2 pr-3 font-medium">Customer</th>

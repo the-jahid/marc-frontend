@@ -135,7 +135,7 @@ export default function AgentConfigTab() {
         </p>
       ) : (
         <div className="mt-6 space-y-5 pb-8">
-          <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+          <div className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm sm:p-5 dark:border-zinc-800 dark:bg-zinc-900">
             <label
               htmlFor="agent-model"
               className="block font-medium text-zinc-900 dark:text-zinc-50"
@@ -189,7 +189,7 @@ export default function AgentConfigTab() {
             </p>
           </div>
 
-          <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+          <div className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm sm:p-5 dark:border-zinc-800 dark:bg-zinc-900">
             <label
               htmlFor="agent-system-prompt"
               className="block font-medium text-zinc-900 dark:text-zinc-50"
@@ -213,7 +213,7 @@ export default function AgentConfigTab() {
             </p>
           </div>
 
-          <div className="flex items-center justify-between gap-4">
+          <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
             <p className="text-xs text-zinc-400">
               {config?.updatedAt
                 ? `Last saved ${formatDateTime(config.updatedAt)}`

@@ -157,7 +157,7 @@ export default function KnowledgebaseTab() {
         </button>
       </div>
 
-      <div className="mt-6 rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+      <div className="mt-6 rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm sm:p-5 dark:border-zinc-800 dark:bg-zinc-900">
         <div className="flex flex-wrap items-end gap-3">
           <div className="min-w-52 flex-1">
             <label className="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
@@ -186,7 +186,7 @@ export default function KnowledgebaseTab() {
           <button
             onClick={uploadDocument}
             disabled={uploading || !uploadFile}
-            className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+            className="w-full rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
           >
             {uploading ? "Uploading..." : "Upload"}
           </button>
@@ -205,7 +205,7 @@ export default function KnowledgebaseTab() {
       )}
 
       {editor && (
-        <div className="mt-6 rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+        <div className="mt-6 rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm sm:p-5 dark:border-zinc-800 dark:bg-zinc-900">
           <h3 className="font-medium text-zinc-900 dark:text-zinc-50">
             {editor.id === null ? "New entry" : "Edit entry"}
           </h3>
@@ -253,7 +253,7 @@ export default function KnowledgebaseTab() {
         )}
 
         {!loading && !error && entries.length === 0 && !editor && (
-          <div className="rounded-2xl border border-dashed border-zinc-300 p-10 text-center dark:border-zinc-700">
+          <div className="rounded-2xl border border-dashed border-zinc-300 p-6 text-center sm:p-10 dark:border-zinc-700">
             <p className="font-medium text-zinc-700 dark:text-zinc-300">
               No knowledge entries yet
             </p>
@@ -267,7 +267,7 @@ export default function KnowledgebaseTab() {
         {entries.map((entry) => (
           <article
             key={entry.id}
-            className="group rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm transition-shadow hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900"
+            className="group rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md sm:p-5 dark:border-zinc-800 dark:bg-zinc-900"
           >
             <div className="flex items-start justify-between gap-4">
               <div className="min-w-0">

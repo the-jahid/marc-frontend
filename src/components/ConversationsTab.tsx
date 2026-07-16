@@ -220,6 +220,15 @@ export default function ConversationsTab() {
     }
   };
 
+  const scrollToOldestMessage = () => {
+    const container = messagesContainerRef.current;
+
+    if (container) {
+      shouldFollowLatestMessageRef.current = false;
+      container.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
+
   const handleSend = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
@@ -505,45 +514,72 @@ export default function ConversationsTab() {
               </div>
             )}
 
-            <div
-              ref={messagesContainerRef}
-              onScroll={handleMessagesScroll}
-              className="flex-1 space-y-2 overflow-y-auto px-6 py-4"
-            >
-              {loadingMessages && messages.length === 0 && (
-                <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                  Loading messages…
-                </p>
+            <div className="relative flex min-h-0 flex-1 flex-col">
+              {messages.length > 0 && (
+                <button
+                  type="button"
+                  onClick={scrollToOldestMessage}
+                  aria-label="Scroll to first message"
+                  title="Scroll to first message"
+                  className="absolute right-5 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full border border-zinc-200 bg-white/90 text-zinc-600 shadow-sm backdrop-blur-sm transition-colors hover:bg-zinc-100 hover:text-zinc-900 dark:border-zinc-700 dark:bg-zinc-900/90 dark:text-zinc-300 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
+                >
+                  <svg
+                    className="h-5 w-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                    aria-hidden="true"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M4.5 18.75l7.5-7.5 7.5 7.5M4.5 5.25h15"
+                    />
+                  </svg>
+                </button>
               )}
 
-              {messages.map((message) => {
-                const isUser = message.role === "USER";
-                return (
-                  <div
-                    key={message.id}
-                    className={`flex ${isUser ? "justify-start" : "justify-end"}`}
-                  >
+              <div
+                ref={messagesContainerRef}
+                onScroll={handleMessagesScroll}
+                className="flex-1 space-y-2 overflow-y-auto px-6 py-4"
+              >
+                {loadingMessages && messages.length === 0 && (
+                  <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                    Loading messages…
+                  </p>
+                )}
+
+                {messages.map((message) => {
+                  const isUser = message.role === "USER";
+                  return (
                     <div
-                      className={`max-w-[70%] rounded-2xl px-4 py-2 shadow-sm ${
-                        isUser
-                          ? "rounded-bl-md border border-zinc-200 bg-white text-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
-                          : "rounded-br-md bg-linear-to-br from-emerald-600 to-teal-700 text-white"
-                      }`}
+                      key={message.id}
+                      className={`flex ${isUser ? "justify-start" : "justify-end"}`}
                     >
-                      <p className="whitespace-pre-wrap wrap-break-word text-sm leading-relaxed">
-                        {message.content}
-                      </p>
-                      <p
-                        className={`mt-1 text-right text-[10px] ${
-                          isUser ? "text-zinc-400" : "text-emerald-100/80"
+                      <div
+                        className={`max-w-[70%] rounded-2xl px-4 py-2 shadow-sm ${
+                          isUser
+                            ? "rounded-bl-md border border-zinc-200 bg-white text-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+                            : "rounded-br-md bg-linear-to-br from-emerald-600 to-teal-700 text-white"
                         }`}
                       >
-                        {formatTime(message.createdAt)}
-                      </p>
+                        <p className="whitespace-pre-wrap wrap-break-word text-sm leading-relaxed">
+                          {message.content}
+                        </p>
+                        <p
+                          className={`mt-1 text-right text-[10px] ${
+                            isUser ? "text-zinc-400" : "text-emerald-100/80"
+                          }`}
+                        >
+                          {formatTime(message.createdAt)}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
 
             <form

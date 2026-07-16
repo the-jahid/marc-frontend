@@ -5,6 +5,7 @@ import {
   type KeyboardEvent,
   useCallback,
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
 } from "react";
@@ -15,6 +16,37 @@ import {
   type ConversationMessage,
   type ConversationSummary,
 } from "@/lib/api";
+
+const BOTTOM_SCROLL_THRESHOLD_PX = 80;
+
+function isNearBottom(element: HTMLDivElement) {
+  return (
+    element.scrollHeight - element.scrollTop - element.clientHeight <=
+    BOTTOM_SCROLL_THRESHOLD_PX
+  );
+}
+
+function haveSameMessages(
+  currentMessages: ConversationMessage[],
+  nextMessages: ConversationMessage[],
+) {
+  return (
+    currentMessages.length === nextMessages.length &&
+    currentMessages.every((currentMessage, index) => {
+      const nextMessage = nextMessages[index];
+
+      return (
+        currentMessage.id === nextMessage.id &&
+        currentMessage.role === nextMessage.role &&
+        currentMessage.content === nextMessage.content &&
+        currentMessage.createdAt === nextMessage.createdAt &&
+        currentMessage.needsHumanAttention ===
+          nextMessage.needsHumanAttention &&
+        currentMessage.attentionReason === nextMessage.attentionReason
+      );
+    })
+  );
+}
 
 function AttentionIcon({ className = "h-4 w-4" }: { className?: string }) {
   return (
@@ -46,7 +78,9 @@ export default function ConversationsTab() {
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
   const [sendError, setSendError] = useState<string | null>(null);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const shouldFollowLatestMessageRef = useRef(true);
+  const isOpeningConversationRef = useRef(false);
   const selectedPhoneRef = useRef<string | null>(null);
 
   const fetchConversations = useCallback(async () => {
@@ -68,11 +102,17 @@ export default function ConversationsTab() {
       const data = await apiFetch<ConversationMessage[]>(
         `/conversations/${encodeURIComponent(phoneNumber)}/messages`,
       );
-      setMessages(data);
+      if (selectedPhoneRef.current === phoneNumber) {
+        setMessages((currentMessages) =>
+          haveSameMessages(currentMessages, data) ? currentMessages : data,
+        );
+      }
     } catch {
       // Keep the previous messages visible if a refresh fails.
     } finally {
-      setLoadingMessages(false);
+      if (selectedPhoneRef.current === phoneNumber) {
+        setLoadingMessages(false);
+      }
     }
   }, []);
 
@@ -110,8 +150,28 @@ export default function ConversationsTab() {
     };
   }, [selectedPhone, fetchMessages]);
 
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  useLayoutEffect(() => {
+    const container = messagesContainerRef.current;
+
+    if (!container || (isOpeningConversationRef.current && messages.length === 0)) {
+      return;
+    }
+
+    if (isOpeningConversationRef.current) {
+      container.scrollTo({ top: 0, behavior: "auto" });
+      shouldFollowLatestMessageRef.current = false;
+      isOpeningConversationRef.current = false;
+      return;
+    }
+
+    if (!shouldFollowLatestMessageRef.current) {
+      return;
+    }
+
+    container.scrollTo({
+      top: container.scrollHeight,
+      behavior: "smooth",
+    });
   }, [messages]);
 
   const filteredConversations = conversations.filter((conversation) =>
@@ -133,11 +193,29 @@ export default function ConversationsTab() {
 
   const selectConversation = (phoneNumber: string) => {
     selectedPhoneRef.current = phoneNumber;
+    shouldFollowLatestMessageRef.current = true;
+    isOpeningConversationRef.current = true;
     setSelectedPhone(phoneNumber);
     setMessages([]);
     setLoadingMessages(true);
     setDraft("");
     setSendError(null);
+  };
+
+  const backToList = () => {
+    selectedPhoneRef.current = null;
+    setSelectedPhone(null);
+    setMessages([]);
+    setLoadingMessages(false);
+    setSendError(null);
+  };
+
+  const handleMessagesScroll = () => {
+    const container = messagesContainerRef.current;
+
+    if (container) {
+      shouldFollowLatestMessageRef.current = isNearBottom(container);
+    }
   };
 
   const handleSend = async (event: FormEvent<HTMLFormElement>) => {
@@ -206,7 +284,11 @@ export default function ConversationsTab() {
   return (
     <div className="flex h-full overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
       {/* Sidebar */}
-      <aside className="flex w-full max-w-xs flex-col border-r border-zinc-200 dark:border-zinc-800 sm:max-w-sm">
+      <aside
+        className={`${
+          selectedPhone ? "hidden lg:flex" : "flex"
+        } w-full flex-col border-r border-zinc-200 dark:border-zinc-800 lg:w-80 lg:shrink-0 xl:w-96`}
+      >
         <div className="border-b border-zinc-200 p-4 dark:border-zinc-800">
           <div className="relative">
             <svg
@@ -330,7 +412,11 @@ export default function ConversationsTab() {
       </aside>
 
       {/* Chat panel */}
-      <section className="flex min-w-0 flex-1 flex-col bg-zinc-50 dark:bg-zinc-950/40">
+      <section
+        className={`${
+          selectedPhone ? "flex" : "hidden lg:flex"
+        } min-w-0 flex-1 flex-col bg-zinc-50 dark:bg-zinc-950/40`}
+      >
         {!selectedPhone ? (
           <div className="flex flex-1 flex-col items-center justify-center gap-3">
             <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-zinc-100 dark:bg-zinc-800">
@@ -356,6 +442,27 @@ export default function ConversationsTab() {
           <>
             <header className="flex items-center justify-between gap-4 border-b border-zinc-200 bg-white px-6 py-3 dark:border-zinc-800 dark:bg-zinc-900">
               <div className="flex min-w-0 items-center gap-3">
+                <button
+                  type="button"
+                  onClick={backToList}
+                  aria-label="Back to conversations"
+                  className="-ml-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-900 lg:hidden dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
+                >
+                  <svg
+                    className="h-5 w-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                    aria-hidden="true"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M15.75 19.5 8.25 12l7.5-7.5"
+                    />
+                  </svg>
+                </button>
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-emerald-500 to-teal-600 text-sm font-semibold text-white">
                   {selectedPhone.slice(-2)}
                 </div>
@@ -396,7 +503,11 @@ export default function ConversationsTab() {
               </div>
             )}
 
-            <div className="flex-1 space-y-2 overflow-y-auto px-6 py-4">
+            <div
+              ref={messagesContainerRef}
+              onScroll={handleMessagesScroll}
+              className="flex-1 space-y-2 overflow-y-auto px-6 py-4"
+            >
               {loadingMessages && messages.length === 0 && (
                 <p className="text-sm text-zinc-500 dark:text-zinc-400">
                   Loading messages…
@@ -431,7 +542,6 @@ export default function ConversationsTab() {
                   </div>
                 );
               })}
-              <div ref={messagesEndRef} />
             </div>
 
             <form

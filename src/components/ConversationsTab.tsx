@@ -153,14 +153,16 @@ export default function ConversationsTab() {
   useLayoutEffect(() => {
     const container = messagesContainerRef.current;
 
-    if (!container || (isOpeningConversationRef.current && messages.length === 0)) {
+    if (!container || messages.length === 0) {
       return;
     }
 
+    // Jump straight to the newest message when the conversation first opens;
+    // animating from the top would scroll through the whole history.
     if (isOpeningConversationRef.current) {
-      container.scrollTo({ top: 0, behavior: "auto" });
-      shouldFollowLatestMessageRef.current = false;
       isOpeningConversationRef.current = false;
+      shouldFollowLatestMessageRef.current = true;
+      container.scrollTo({ top: container.scrollHeight, behavior: "auto" });
       return;
     }
 
